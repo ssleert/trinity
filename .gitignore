@@ -1,0 +1,4 @@
+obj/
+main.db*
+.DS_Store
+trinity
