@@ -6,7 +6,8 @@ CFLAGS     ?= -std=c99 -Wall -Wextra -Wpedantic \
               -Wformat=2 -Wno-unused-parameter -Wshadow \
               -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
               -Wredundant-decls -Wnested-externs -Wmissing-include-dirs \
-              -Wno-format-nonliteral # -Wno-incompatible-pointer-types-discards-qualifiers 
+              -Wno-format-nonliteral \
+							-DSQLITE_THREADSAFE=1 # -Wno-incompatible-pointer-types-discards-qualifiers 
 ifeq ($(CC),gcc)
   CFLAGS   += -Wjump-misses-init -Wlogical-op
 endif
@@ -21,12 +22,6 @@ endif
 
 CFLAGS_DEBUG   = $(CFLAGS) -O0 -g3 -fstack-protector -ftrapv -fwrapv
 CFLAGS_DEBUG  += -fsanitize=address,undefined
-
-PREFIX     ?= /usr/local
-BINDIR     ?= $(PREFIX)/bin
-CONFDIR    ?= $(PREFIX)/etc
-ASSETSPATH ?= ./assets/
-INSTALL    ?= install -s
 
 SRCDIR     ?= src
 OBJDIR     ?= obj

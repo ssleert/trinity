@@ -1,3 +1,4 @@
+#include "trinity.h"
 #include "tcp_server.h"
 #include "http.h"
 #include "routes.h"
@@ -61,9 +62,6 @@ void* tcp_worker(void* data) {
         }
     }
 }
-
-#define PORT 8020
-#define NUM_THREADS 20
 
 int main(void) {
     if (uuid4_init()) {

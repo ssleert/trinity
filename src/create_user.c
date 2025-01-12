@@ -84,8 +84,9 @@ int create_user_route(HttpRequest* req, HttpResponse* res) {
 
     char user_password_hash[SHA256_HEX_SIZE];
     if (hash_user_password_with_pow(user_password_hash, input.password, password_hash_pow)) {
-        LogErr("Cant hash password");
         create_http_response(res, "500", NULL, 0, NULL);
+        free_create_user_input(&input);
+        LogErr("Cant hash password");
         return 0;
     }
 
@@ -103,13 +104,14 @@ int create_user_route(HttpRequest* req, HttpResponse* res) {
 
     int rc = add_user_to_db(&user);
     if (rc) {
-        LogErr("Db error: rc = %d", rc);
-        free_create_user_input(&input);
         create_http_response(res, "500", NULL, 0, NULL);
+        free_create_user_input(&input);
+        LogErr("Db error: rc = %d", rc);
         return 0;
     }
 
     create_http_response(res, "200", NULL, 0, "user created");
+    free_create_user_input(&input);
 
     LogInfo("user created");
 
