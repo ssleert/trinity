@@ -103,6 +103,8 @@ void* tcp_worker(void* data) {
 }
 
 int main(void) {
+    signal(SIGPIPE, SIG_IGN);
+
     if (sqlite3_initialize()) {
         perror("Error with sqlite3 init");
         return -1;
