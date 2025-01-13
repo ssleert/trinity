@@ -22,7 +22,7 @@ typedef struct {
   char* data;
 } Message;
 
-int init_db(const char* filename);
+int init_db(void);
 
 int add_user_to_db(const User* user);
 

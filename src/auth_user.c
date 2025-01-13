@@ -125,9 +125,8 @@ int auth_user_route(HttpRequest* req, HttpResponse* res) {
         return 0;
     }
 
-    free_auth_user_input(&input);
-
     create_http_response(res, "200", NULL, 0, session_key);
+    free_auth_user_input(&input);
 
     return 0;
 }

@@ -4,6 +4,9 @@
 #include "routes.h"
 #include "uuid4.h"
 #include "db.h"
+#include "sqlite3.h"
+#include "utils.h"
+#include "log.h"
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
@@ -11,6 +14,8 @@
 
 // Custom handler function to handle client connections
 void client_handler(int client_socket) {
+    LogTrace("client handler called");
+
     HttpRequest request = {0};
     if (http_request_read_from_socket(client_socket, &request) < 0) {
         perror("Http read request failed");
@@ -18,9 +23,43 @@ void client_handler(int client_socket) {
         close(client_socket);
         return;
     }
-    
+
+    LogTrace("%s %s", request.method, request.path);
+    for (size_t i = 0; i < request.headers_len; ++i) {
+        LogTrace("%s", request.headers[i]);
+    }
+    LogTrace("body_len = %lu '%.*s'", request.body_len, (int)request.body_len, request.body);
+
     HttpResponse response = {0};
 
+    int event_stream_requested = strcmp(request.path, "/events/subscribe") == 0;
+    LogTrace("event_stream_requested = %d", event_stream_requested);
+    if (event_stream_requested) {
+        LogTrace("event stream request");
+        pthread_t thrd;
+
+        HttpRequest* req_copy = malloc(sizeof(HttpRequest));
+        if (!req_copy) {
+            free_http_request(&request);
+            return;
+        }
+
+        if (copy_http_request(&request, req_copy)) {
+            free_http_request(&request);
+            free(req_copy);
+            return;
+        }
+
+        RequestAndResponse* req_and_res = malloc(sizeof(RequestAndResponse));
+        req_and_res->req = req_copy;
+        req_and_res->res = NULL;
+
+        pthread_create(&thrd, NULL, exec_route_by_path_in_thread, req_and_res);
+        pthread_detach(thrd);
+        return;
+    }
+
+    LogTrace("try to execute route by path");
     int rc = exec_route_by_path(&request, &response);
     if (rc == -255) {
         perror("Not Found Error");
@@ -36,7 +75,7 @@ void client_handler(int client_socket) {
         free_http_request(&request);
         return;
     }
-    
+
     if (http_response_write_to_socket(client_socket, &response)) {
         perror("Http write response failed");
         send(client_socket, HTTP_INTERNAL_SERVER_ERROR, sizeof(HTTP_INTERNAL_SERVER_ERROR)-1, 0);
@@ -64,12 +103,17 @@ void* tcp_worker(void* data) {
 }
 
 int main(void) {
+    if (sqlite3_initialize()) {
+        perror("Error with sqlite3 init");
+        return -1;
+    }
+
     if (uuid4_init()) {
         perror("Error With Uuid4 init");
         return -1;
     };
     
-    if (init_db("main.db")) {
+    if (init_db()) {
         perror("Error with db");
         return -1;
     }
@@ -101,10 +145,14 @@ int main(void) {
         }
     }
 
+    LogTrace("all threads created");
+
     // Wait for all threads to complete
     for (t = 0; t < NUM_THREADS; t++) {
         pthread_join(threads[t], NULL);
     }
+
+    LogTrace("all threads created");
 
     return 0;
 }

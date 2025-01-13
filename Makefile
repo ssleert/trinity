@@ -7,12 +7,12 @@ CFLAGS     ?= -std=c99 -Wall -Wextra -Wpedantic \
               -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
               -Wredundant-decls -Wnested-externs -Wmissing-include-dirs \
               -Wno-format-nonliteral \
-							-DSQLITE_THREADSAFE=1 # -Wno-incompatible-pointer-types-discards-qualifiers 
+							-DSQLITE_THREADSAFE=0 -DSQLITE_DEFAULT_MEMSTATUS=0 -DSQLITE_OMIT_DEPRECATED -DSQLITE_OMIT_PROGRESS_CALLBACK -DSQLITE_USE_ALLOCA -DSQLITE_OMIT_AUTOINIT # -Wno-incompatible-pointer-types-discards-qualifiers 
 ifeq ($(CC),gcc)
   CFLAGS   += -Wjump-misses-init -Wlogical-op
 endif
 
-CFLAGS_RELEASE = $(CFLAGS) -O3 -DNDEBUG -DNTRACE -march=native
+CFLAGS_RELEASE = $(CFLAGS) -Ofast -DNDEBUG -DNTRACE -march=native
 ifeq ($(CC),gcc-14)
   CFLAGS_RELEASE += -flto
 endif

@@ -45,9 +45,9 @@ static const char db_schema[] = STR(
     );
 );
 
-int init_db(const char* filename) {
+int init_db(void) {
   // Open database connection
-  int rc = init_sqlite_connection_pool(&conn_pool, filename);
+  int rc = init_sqlite_connection_pool(&conn_pool, "main.db");
   if (rc) {
       LogErr("Can't open sqlite3 connection pool");
       return EXIT_FAILURE;
@@ -383,7 +383,7 @@ int add_message_to_db(const Message* message) {
     sqlite3* db = sqlite_get_connection(&conn_pool);
 
     const char* sql = "INSERT INTO messages (uuid, sender_id, receiver_id, data) "
-                       "VALUES (?, ?, ?, ?);";
+                      "VALUES (?, ?, ?, ?);";
     sqlite3_stmt* stmt;
 
     // Prepare the SQL statement

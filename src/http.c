@@ -61,6 +61,8 @@ int http_request_read_from_socket(int socket, HttpRequest* http_request) {
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read;
 
+    http_request->socket = socket;
+
     // Read request line (e.g., "GET /path HTTP/1.1")
     bytes_read = read_line(socket, buffer, sizeof(buffer));
     if (bytes_read <= 0) {
@@ -143,6 +145,65 @@ int http_request_read_from_socket(int socket, HttpRequest* http_request) {
 void free_http_request(HttpRequest* http_request) {
     free_headers(http_request->headers, http_request->headers_len);
     free(http_request->body);
+}
+
+int copy_http_request(HttpRequest* first, HttpRequest* second) {
+    if (!first || !second) {
+        return -1; // Error: Null pointer passed
+    }
+
+    // Copy primitive fields
+    second->socket = first->socket;
+    strncpy(second->method, first->method, sizeof(second->method) - 1);
+    second->method[sizeof(second->method) - 1] = '\0';
+    strncpy(second->path, first->path, sizeof(second->path) - 1);
+    second->path[sizeof(second->path) - 1] = '\0';
+
+    // Copy headers
+    second->headers_len = first->headers_len;
+    if (first->headers_len > 0) {
+        second->headers = (char**)malloc(first->headers_len * sizeof(char*));
+        if (!second->headers) {
+            return -1; // Error: Memory allocation failed
+        }
+
+        for (size_t i = 0; i < first->headers_len; i++) {
+            size_t header_len = strlen(first->headers[i]) + 1;
+            second->headers[i] = (char*)malloc(header_len);
+            if (!second->headers[i]) {
+                // Free previously allocated headers
+                for (size_t j = 0; j < i; j++) {
+                    free(second->headers[j]);
+                }
+                free(second->headers);
+                return -1; // Error: Memory allocation failed
+            }
+            strncpy(second->headers[i], first->headers[i], header_len);
+        }
+    } else {
+        second->headers = NULL;
+    }
+
+    // Copy body
+    second->body_len = first->body_len;
+    if (first->body_len > 0) {
+        second->body = (char*)malloc(first->body_len);
+        if (!second->body) {
+            // Free headers if body allocation fails
+            if (second->headers) {
+                for (size_t i = 0; i < second->headers_len; i++) {
+                    free(second->headers[i]);
+                }
+                free(second->headers);
+            }
+            return -1; // Error: Memory allocation failed
+        }
+        memcpy(second->body, first->body, first->body_len);
+    } else {
+        second->body = NULL;
+    }
+
+    return 0; // Success
 }
 
 int http_response_write_to_socket(int socket, HttpResponse* http_response) {
@@ -247,4 +308,66 @@ void free_http_response(HttpResponse* response) {
 
     // Free the body
     free(response->body);
+}
+
+int copy_http_response(HttpResponse* first, HttpResponse* second) {
+    if (!first || !second) {
+        return -1; // Error: Null pointer passed
+    }
+
+    // Initialize second to avoid copying over existing data
+    second->status = NULL;
+    second->headers_len = 0;
+    second->headers = NULL;
+    second->body_len = 0;
+    second->body = NULL;
+
+    // Copy status
+    if (first->status) {
+        second->status = strdup(first->status);
+        if (!second->status) {
+            return -1; // Error: Memory allocation failed
+        }
+    }
+
+    // Copy headers
+    second->headers_len = first->headers_len;
+    if (first->headers_len > 0 && first->headers) {
+        second->headers = (char**)malloc(first->headers_len * sizeof(char*));
+        if (!second->headers) {
+            free(second->status);
+            return -1; // Error: Memory allocation failed
+        }
+
+        for (size_t i = 0; i < first->headers_len; i++) {
+            second->headers[i] = strdup(first->headers[i]);
+            if (!second->headers[i]) {
+                // Cleanup previously allocated memory
+                for (size_t j = 0; j < i; j++) {
+                    free(second->headers[j]);
+                }
+                free(second->headers);
+                free(second->status);
+                return -1; // Error: Memory allocation failed
+            }
+        }
+    }
+
+    // Copy body
+    second->body_len = first->body_len;
+    if (first->body_len > 0 && first->body) {
+        second->body = (char*)malloc(first->body_len);
+        if (!second->body) {
+            // Cleanup allocated memory
+            for (size_t i = 0; i < second->headers_len; i++) {
+                free(second->headers[i]);
+            }
+            free(second->headers);
+            free(second->status);
+            return -1; // Error: Memory allocation failed
+        }
+        memcpy(second->body, first->body, first->body_len);
+    }
+
+    return 0; // Success
 }

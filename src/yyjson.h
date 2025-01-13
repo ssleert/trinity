@@ -83,6 +83,7 @@
  This will reduce the binary size by about 30%.
  */
 #ifndef YYJSON_DISABLE_WRITER
+#define YYJSON_DISABLE_WRITER 1
 #endif
 
 /*

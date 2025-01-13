@@ -4,6 +4,6 @@
 #define STR(...) #__VA_ARGS__
 
 #define PORT 8020
-#define NUM_THREADS 20
+#define NUM_THREADS 30
 
 #endif
