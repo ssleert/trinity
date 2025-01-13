@@ -33,8 +33,8 @@ static const char db_schema[] = STR(
     CREATE TABLE IF NOT EXISTS messages (
         id                INTEGER PRIMARY KEY AUTOINCREMENT,
         deleted_at        BIGINTEGER,
-        created_at        BIGINTEGER NOT NULL DEFAULT (unixepoch()),
-        updated_at        BIGINTEGER NOT NULL DEFAULT (unixepoch()),
+        created_at        BIGINTEGER NOT NULL,
+        updated_at        BIGINTEGER NOT NULL,
         uuid              TEXT       NOT NULL,
         sender_id         INTEGER    NOT NULL,
         receiver_id       INTEGER    NOT NULL,
@@ -382,8 +382,8 @@ int add_message_to_db(const Message* message) {
 
     sqlite3* db = sqlite_get_connection(&conn_pool);
 
-    const char* sql = "INSERT INTO messages (uuid, sender_id, receiver_id, data) "
-                      "VALUES (?, ?, ?, ?);";
+    const char* sql = "INSERT INTO messages (created_at, updated_at, uuid, sender_id, receiver_id, data) "
+                      "VALUES (?, ?, ?, ?, ?, ?);";
     sqlite3_stmt* stmt;
 
     // Prepare the SQL statement
@@ -395,10 +395,12 @@ int add_message_to_db(const Message* message) {
     }
 
     // Bind the parameters to the SQL statement
-    sqlite3_bind_text(stmt, 1, message->uuid, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 2, message->sender_id);
-    sqlite3_bind_int(stmt, 3, message->receiver_id);
-    sqlite3_bind_text(stmt, 4, message->data, -1, SQLITE_STATIC);
+    sqlite3_bind_int64(stmt, 1, message->created_at);
+    sqlite3_bind_int64(stmt, 2, message->updated_at);
+    sqlite3_bind_text(stmt, 3, message->uuid, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 4, message->sender_id);
+    sqlite3_bind_int(stmt, 5, message->receiver_id);
+    sqlite3_bind_text(stmt, 6, message->data, -1, SQLITE_STATIC);
 
     // Execute the statement
     rc = sqlite3_step(stmt);

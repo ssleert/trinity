@@ -7,6 +7,7 @@
 #include "sqlite3.h"
 #include "utils.h"
 #include "log.h"
+#include "event_bus.h"
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
@@ -104,6 +105,10 @@ void* tcp_worker(void* data) {
 
 int main(void) {
     signal(SIGPIPE, SIG_IGN);
+
+    if (init_global_event_bus()) {
+        perror("Cant init global event bus");
+    }
 
     if (sqlite3_initialize()) {
         perror("Error with sqlite3 init");

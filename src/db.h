@@ -16,6 +16,8 @@ typedef struct {
 } Session;
 
 typedef struct {
+  time_t created_at;
+  time_t updated_at;
   char* uuid;
   int   sender_id;
   int   receiver_id;

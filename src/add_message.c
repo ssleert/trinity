@@ -1,8 +1,10 @@
 #include "add_message.h"
+#include "events.h"
 #include "log.h"
 #include "yyjson.h"
 #include "db.h"
 #include "uuid4.h"
+#include "event_bus.h"
 #include <stdlib.h>
 
 // Free function for AddMessageInput
@@ -102,7 +104,11 @@ int add_message_route(HttpRequest* req, HttpResponse* res) {
     char message_uuid[UUID4_LEN];
     uuid4_generate(message_uuid);
 
+    time_t current_time = time(NULL);
+
     const Message message = {
+        .created_at = current_time,
+        .updated_at = current_time,
         .uuid = message_uuid,
         .sender_id = user_id,
         .receiver_id = receiver_id,
@@ -117,6 +123,42 @@ int add_message_route(HttpRequest* req, HttpResponse* res) {
         create_http_response(res, "500", NULL, 0, NULL);
         free_add_message_input(&input);
         return 0;
+    }
+
+
+    MsgWithMetaInfo* ev_msg = malloc(sizeof(MsgWithMetaInfo));
+    if (!ev_msg) {
+        LogErr("Cant alloc memory for message for event");
+        create_http_response(res, "500", NULL, 0, NULL);
+        free_add_message_input(&input);
+        return 0;
+    }
+    
+    if (create_msg_with_meta_info(ev_msg, message_uuid, input.msg, current_time)) {
+        LogErr("Cant create msg with meta info for event");
+        create_http_response(res, "500", NULL, 0, NULL);
+        free_add_message_input(&input);
+        return 0;
+    }
+ 
+    EventNewMessage* ev = malloc(sizeof(EventNewMessage));
+    if (!ev) {
+        LogErr("Cant alloc memory for new message event");
+        create_http_response(res, "500", NULL, 0, NULL);
+        free_add_message_input(&input);
+        return 0;
+    }
+
+    if (create_event_new_message(ev, ev_msg)) {
+        LogErr("Cant create new message event");
+        create_http_response(res, "500", NULL, 0, NULL);
+        free_add_message_input(&input);
+        return 0;
+    }
+
+    if (add_new_event_to_queue_by_user_id(global_event_bus, receiver_id, (EventBase*)ev)) {
+        LogWarn("Cant send message to bus");
+        free_event_base((EventBase*)ev);
     }
 
     // Successfully created the message

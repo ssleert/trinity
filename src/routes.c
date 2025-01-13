@@ -22,6 +22,7 @@ void* exec_route_by_path_in_thread(void* data) {
   LogTrace("Route in thread Executed: rc = %d", rc);
   
   LogTrace("im alive");
+  close(req_and_res->req->socket);
   free(req_and_res->req);
   LogTrace("im alive");
 
