@@ -1,7 +1,7 @@
 #include "db.h"
 #include "log.h"
-#include "trinity.h"
 #include "sqlite_connection_pool.h"
+#include "trinity.h"
 #include <string.h>
 
 static SQLiteConnectionPool conn_pool;
@@ -14,105 +14,104 @@ static const char db_schema[] = STR(
     pragma mmap_size = 30000000000;
     pragma page_size = 32768;
 
-    CREATE TABLE IF NOT EXISTS users (
-        id                INTEGER PRIMARY KEY AUTOINCREMENT,
-        uuid              TEXT NOT NULL,
-        nickname          TEXT UNIQUE NOT NULL,
-        password_hash     TEXT NOT NULL,
-        password_hash_pow TEXT NOT NULL
-    );
+    CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        uuid TEXT NOT NULL,
+        nickname TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        password_hash_pow TEXT NOT NULL);
 
-    CREATE TABLE IF NOT EXISTS sessions (
-        id                INTEGER PRIMARY KEY AUTOINCREMENT,
-        session_key       TEXT    NOT NULL,
-        user_id           INTEGER NOT NULL,
+    CREATE TABLE IF NOT EXISTS sessions(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_key TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
 
-        FOREIGN KEY(user_id) REFERENCES users(id)
-    );
+        FOREIGN KEY(user_id) REFERENCES users(id));
 
-    CREATE TABLE IF NOT EXISTS messages (
-        id                INTEGER PRIMARY KEY AUTOINCREMENT,
-        deleted_at        BIGINTEGER,
-        created_at        BIGINTEGER NOT NULL,
-        updated_at        BIGINTEGER NOT NULL,
-        uuid              TEXT       NOT NULL,
-        sender_id         INTEGER    NOT NULL,
-        receiver_id       INTEGER    NOT NULL,
-        data              TEXT       NOT NULL,
+    CREATE TABLE IF NOT EXISTS messages(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        deleted_at BIGINTEGER,
+        created_at BIGINTEGER NOT NULL,
+        updated_at BIGINTEGER NOT NULL,
+        uuid TEXT NOT NULL,
+        sender_id INTEGER NOT NULL,
+        receiver_id INTEGER NOT NULL,
+        data TEXT NOT NULL,
 
-        FOREIGN KEY(sender_id)   REFERENCES users(id),
-        FOREIGN KEY(receiver_id) REFERENCES users(id)
-    );
-);
+        FOREIGN KEY(sender_id) REFERENCES users(id),
+        FOREIGN KEY(receiver_id) REFERENCES users(id)););
 
-int init_db(void) {
-  // Open database connection
-  int rc = init_sqlite_connection_pool(&conn_pool, "main.db");
-  if (rc) {
-      LogErr("Can't open sqlite3 connection pool");
-      return EXIT_FAILURE;
-  } else {
-      LogTrace("Opened database successfully");
-  }
+int init_db(void)
+{
+    // Open database connection
+    int rc = init_sqlite_connection_pool(&conn_pool, "main.db");
+    if (rc) {
+        LogErr("Can't open sqlite3 connection pool");
+        return EXIT_FAILURE;
+    } else {
+        LogTrace("Opened database successfully");
+    }
 
-  LogInfo("db_schema = '%s'", db_schema);
+    LogInfo("db_schema = '%s'", db_schema);
 
-  sqlite3* db = sqlite_get_connection(&conn_pool);
+    sqlite3* db = sqlite_get_connection(&conn_pool);
 
-  char* err_msg = NULL;
-  rc = sqlite3_exec(db, db_schema, NULL, NULL, &err_msg);
-  if (rc != SQLITE_OK) {
-      LogErr("Failed to initialize database schema: %s", err_msg);
-      sqlite3_free(err_msg);
-      sqlite_release_connection(&conn_pool, db);
-      return EXIT_FAILURE;
-  }
-  LogInfo("Database schema initialized successfully.");
+    char* err_msg = NULL;
+    rc = sqlite3_exec(db, db_schema, NULL, NULL, &err_msg);
+    if (rc != SQLITE_OK) {
+        LogErr("Failed to initialize database schema: %s", err_msg);
+        sqlite3_free(err_msg);
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
+    LogInfo("Database schema initialized successfully.");
 
-  sqlite_release_connection(&conn_pool, db);
+    sqlite_release_connection(&conn_pool, db);
 
-  return 0;
+    return 0;
 }
 
-int add_user_to_db(const User* user) {
-  if (!user || !user->nickname || !user->password_hash || !user->uuid) {
-      LogErr("Invalid user data provided.");
-      return EXIT_FAILURE;
-  }
+int add_user_to_db(const User* user)
+{
+    if (!user || !user->nickname || !user->password_hash || !user->uuid) {
+        LogErr("Invalid user data provided.");
+        return EXIT_FAILURE;
+    }
 
-  sqlite3* db = sqlite_get_connection(&conn_pool);
+    sqlite3* db = sqlite_get_connection(&conn_pool);
 
-  const char* sql = "INSERT INTO users (uuid, nickname, password_hash, password_hash_pow) VALUES (?, ?, ?, ?);";
-  sqlite3_stmt* stmt;
+    const char* sql = "INSERT INTO users (uuid, nickname, password_hash, password_hash_pow) VALUES (?, ?, ?, ?);";
+    sqlite3_stmt* stmt;
 
-  int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-  if (rc != SQLITE_OK) {
-      LogErr("Failed to prepare SQL statement: %s", sqlite3_errmsg(db));
-      sqlite_release_connection(&conn_pool, db);
-      return EXIT_FAILURE;
-  }
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        LogErr("Failed to prepare SQL statement: %s", sqlite3_errmsg(db));
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
 
-  sqlite3_bind_text(stmt, 1, user->uuid, -1, SQLITE_STATIC);
-  sqlite3_bind_text(stmt, 2, user->nickname, -1, SQLITE_STATIC);
-  sqlite3_bind_text(stmt, 3, user->password_hash, -1, SQLITE_STATIC);
-  sqlite3_bind_text(stmt, 4, user->password_hash_pow, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, user->uuid, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, user->nickname, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, user->password_hash, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, user->password_hash_pow, -1, SQLITE_STATIC);
 
-  rc = sqlite3_step(stmt);
-  if (rc != SQLITE_DONE) {
-      LogErr("Failed to execute SQL statement: %s", sqlite3_errmsg(db));
-      sqlite3_finalize(stmt);
-      sqlite_release_connection(&conn_pool, db);
-      return EXIT_FAILURE;
-  }
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) {
+        LogErr("Failed to execute SQL statement: %s", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
 
-  LogInfo("User added to the database: UUID = %s, Nickname = %s", user->uuid, user->nickname);
+    LogInfo("User added to the database: UUID = %s, Nickname = %s", user->uuid, user->nickname);
 
-  sqlite3_finalize(stmt);
-  sqlite_release_connection(&conn_pool, db);
-  return EXIT_SUCCESS;
+    sqlite3_finalize(stmt);
+    sqlite_release_connection(&conn_pool, db);
+    return EXIT_SUCCESS;
 }
 
-int get_user_password_hash_and_pow_and_id_by_nickname_from_db(const char* nickname, char* password_hash, char* password_hash_pow, int* id) {
+int get_user_password_hash_and_pow_and_id_by_nickname_from_db(const char* nickname, char* password_hash, char* password_hash_pow, int* id)
+{
     if (!nickname || !password_hash || !password_hash_pow) {
         LogErr("Invalid input parameters.");
         return EXIT_FAILURE;
@@ -181,7 +180,8 @@ int get_user_password_hash_and_pow_and_id_by_nickname_from_db(const char* nickna
     return EXIT_SUCCESS;
 }
 
-int get_user_id_by_uuid(const char* uuid, int* user_id) {
+int get_user_id_by_uuid(const char* uuid, int* user_id)
+{
     if (!uuid || !user_id) {
         LogErr("Invalid parameters provided.");
         return EXIT_FAILURE;
@@ -219,7 +219,8 @@ int get_user_id_by_uuid(const char* uuid, int* user_id) {
     return EXIT_FAILURE;
 }
 
-int get_user_uuid_by_id(int user_id, char* uuid) {
+int get_user_uuid_by_id(int user_id, char* uuid)
+{
     if (!uuid) {
         LogErr("Invalid parameters provided.");
         return EXIT_FAILURE;
@@ -243,7 +244,7 @@ int get_user_uuid_by_id(int user_id, char* uuid) {
     if (rc == SQLITE_ROW) {
         const char* retrieved_uuid = (const char*)sqlite3_column_text(stmt, 0);
         if (retrieved_uuid) {
-            strcpy(uuid, retrieved_uuid);  // Directly copy the UUID
+            strcpy(uuid, retrieved_uuid); // Directly copy the UUID
             sqlite3_finalize(stmt);
             sqlite_release_connection(&conn_pool, db);
             LogInfo("Found UUID for user ID %d: %s", user_id, uuid);
@@ -260,8 +261,8 @@ int get_user_uuid_by_id(int user_id, char* uuid) {
     return EXIT_FAILURE;
 }
 
-
-int add_session_to_db(const Session* session) {
+int add_session_to_db(const Session* session)
+{
     if (!session || !session->session_key || session->user_id <= 0) {
         LogErr("Invalid session data provided.");
         return EXIT_FAILURE;
@@ -301,7 +302,8 @@ int add_session_to_db(const Session* session) {
     return EXIT_SUCCESS;
 }
 
-int get_sessions_id_by_user_id(int user_id, Session** sessions, size_t* sessions_len) {
+int get_sessions_id_by_user_id(int user_id, Session** sessions, size_t* sessions_len)
+{
     if (!sessions || !sessions_len) {
         LogErr("Invalid arguments: sessions or sessions_len is NULL.");
         return EXIT_FAILURE;
@@ -324,7 +326,7 @@ int get_sessions_id_by_user_id(int user_id, Session** sessions, size_t* sessions
 
     sqlite3_bind_int(stmt, 1, user_id);
 
-    size_t capacity = 10;  // Initial capacity for the sessions array
+    size_t capacity = 10; // Initial capacity for the sessions array
     *sessions = malloc(capacity * sizeof(Session));
     if (!*sessions) {
         LogErr("Memory allocation failed for sessions array.");
@@ -374,7 +376,8 @@ int get_sessions_id_by_user_id(int user_id, Session** sessions, size_t* sessions
     return EXIT_SUCCESS;
 }
 
-int add_message_to_db(const Message* message) {
+int add_message_to_db(const Message* message)
+{
     if (!message || !message->uuid || !message->data) {
         LogErr("Invalid input parameters.");
         return EXIT_FAILURE;
@@ -419,7 +422,8 @@ int add_message_to_db(const Message* message) {
     return EXIT_SUCCESS;
 }
 
-int get_user_id_by_session_key(const char* session_key, int* user_id) {
+int get_user_id_by_session_key(const char* session_key, int* user_id)
+{
     if (!session_key || !user_id) {
         LogErr("Invalid input: session_key or user_id pointer is NULL.");
         return EXIT_FAILURE;
@@ -463,4 +467,3 @@ int get_user_id_by_session_key(const char* session_key, int* user_id) {
     sqlite_release_connection(&conn_pool, db);
     return EXIT_FAILURE;
 }
-

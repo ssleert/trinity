@@ -4,8 +4,8 @@
 #include "http.h"
 
 typedef struct {
-  char* nickname;
-  char* password;
+    char* nickname;
+    char* password;
 } AuthUserInput;
 
 void free_auth_user_input(AuthUserInput* self);

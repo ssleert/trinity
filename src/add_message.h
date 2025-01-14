@@ -4,9 +4,9 @@
 #include "http.h"
 
 typedef struct {
-  char* session_key;
-  char* msg;
-  char* receiver_uuid;
+    char* session_key;
+    char* msg;
+    char* receiver_uuid;
 } AddMessageInput;
 
 void free_add_message_input(AddMessageInput* self);

@@ -5,6 +5,6 @@
 
 int is_it_event_subscription(HttpRequest* req);
 
-char* xsprintf(const char *fmt, ...);
+char* xsprintf(const char* fmt, ...);
 
 #endif

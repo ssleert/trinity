@@ -1,26 +1,27 @@
 #include "trinity.h"
-#include "tcp_server.h"
-#include "http.h"
-#include "routes.h"
-#include "uuid4.h"
 #include "db.h"
-#include "sqlite3.h"
-#include "utils.h"
-#include "log.h"
 #include "event_bus.h"
+#include "http.h"
+#include "log.h"
+#include "routes.h"
+#include "sqlite3.h"
+#include "tcp_server.h"
+#include "utils.h"
+#include "uuid4.h"
+#include <pthread.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdbool.h>
-#include <pthread.h>
 
 // Custom handler function to handle client connections
-void client_handler(int client_socket) {
+void client_handler(int client_socket)
+{
     LogTrace("client handler called");
 
-    HttpRequest request = {0};
+    HttpRequest request = { 0 };
     if (http_request_read_from_socket(client_socket, &request) < 0) {
         perror("Http read request failed");
-        send(client_socket, HTTP_BAD_REQUEST_RESPONSE, sizeof(HTTP_BAD_REQUEST_RESPONSE)-1, 0);
+        send(client_socket, HTTP_BAD_REQUEST_RESPONSE, sizeof(HTTP_BAD_REQUEST_RESPONSE) - 1, 0);
         close(client_socket);
         return;
     }
@@ -31,7 +32,7 @@ void client_handler(int client_socket) {
     }
     LogTrace("body_len = %lu '%.*s'", request.body_len, (int)request.body_len, request.body);
 
-    HttpResponse response = {0};
+    HttpResponse response = { 0 };
 
     int event_stream_requested = strcmp(request.path, "/events/subscribe") == 0;
     LogTrace("event_stream_requested = %d", event_stream_requested);
@@ -64,14 +65,14 @@ void client_handler(int client_socket) {
     int rc = exec_route_by_path(&request, &response);
     if (rc == -255) {
         perror("Not Found Error");
-        send(client_socket, HTTP_NOT_FOUND_ERROR, sizeof(HTTP_NOT_FOUND_ERROR)-1, 0);
+        send(client_socket, HTTP_NOT_FOUND_ERROR, sizeof(HTTP_NOT_FOUND_ERROR) - 1, 0);
         close(client_socket);
         free_http_request(&request);
         return;
     }
-    if (rc < 0) { 
+    if (rc < 0) {
         perror("Internal Server Error");
-        send(client_socket, HTTP_INTERNAL_SERVER_ERROR, sizeof(HTTP_INTERNAL_SERVER_ERROR)-1, 0);
+        send(client_socket, HTTP_INTERNAL_SERVER_ERROR, sizeof(HTTP_INTERNAL_SERVER_ERROR) - 1, 0);
         close(client_socket);
         free_http_request(&request);
         return;
@@ -79,7 +80,7 @@ void client_handler(int client_socket) {
 
     if (http_response_write_to_socket(client_socket, &response)) {
         perror("Http write response failed");
-        send(client_socket, HTTP_INTERNAL_SERVER_ERROR, sizeof(HTTP_INTERNAL_SERVER_ERROR)-1, 0);
+        send(client_socket, HTTP_INTERNAL_SERVER_ERROR, sizeof(HTTP_INTERNAL_SERVER_ERROR) - 1, 0);
         close(client_socket);
         free_http_request(&request);
         return;
@@ -92,7 +93,8 @@ void client_handler(int client_socket) {
     free_http_response(&response);
 }
 
-void* tcp_worker(void* data) {
+void* tcp_worker(void* data)
+{
     TCPServer* server = (TCPServer*)data;
     while (true) {
         int client_socket;
@@ -103,7 +105,8 @@ void* tcp_worker(void* data) {
     }
 }
 
-int main(void) {
+int main(void)
+{
     signal(SIGPIPE, SIG_IGN);
 
     if (init_global_event_bus()) {
@@ -119,7 +122,7 @@ int main(void) {
         perror("Error With Uuid4 init");
         return -1;
     };
-    
+
     if (init_db()) {
         perror("Error with db");
         return -1;

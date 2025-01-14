@@ -1,14 +1,15 @@
 #include "http.h"
-#include <unistd.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#include <unistd.h>
 
 #define CONTENT_LEN "Content-Length: "
 #define BUFFER_SIZE 1024
 
-static void free_headers(char** headers, size_t headers_len) {
+static void free_headers(char** headers, size_t headers_len)
+{
     if (headers == NULL) {
         return;
     }
@@ -19,7 +20,8 @@ static void free_headers(char** headers, size_t headers_len) {
 }
 
 // Helper function to read a line from the socket
-static ssize_t read_line(int socket, char* buffer, size_t size) {
+static ssize_t read_line(int socket, char* buffer, size_t size)
+{
     ssize_t total_read = 0;
     ssize_t bytes_read;
     char ch;
@@ -29,7 +31,7 @@ static ssize_t read_line(int socket, char* buffer, size_t size) {
         if (bytes_read <= 0) {
             return bytes_read;
         }
-        
+
         buffer[total_read++] = ch;
         if (ch == '\n') {
             break;
@@ -40,7 +42,8 @@ static ssize_t read_line(int socket, char* buffer, size_t size) {
     return total_read;
 }
 
-static ssize_t read_body(int socket, size_t content_len, char* body) {
+static ssize_t read_body(int socket, size_t content_len, char* body)
+{
     size_t i = 0;
     char ch = 0;
 
@@ -49,7 +52,7 @@ static ssize_t read_body(int socket, size_t content_len, char* body) {
         if (bytes_read <= 0) {
             return i;
         }
-        
+
         body[i] = ch;
     }
 
@@ -57,7 +60,8 @@ static ssize_t read_body(int socket, size_t content_len, char* body) {
 }
 
 // Function to parse HTTP request from socket
-int http_request_read_from_socket(int socket, HttpRequest* http_request) {
+int http_request_read_from_socket(int socket, HttpRequest* http_request)
+{
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read;
 
@@ -91,7 +95,7 @@ int http_request_read_from_socket(int socket, HttpRequest* http_request) {
             free_headers(http_request->headers, header_count);
             return -1; // Error reading headers or connection closed
         }
-        
+
         if (buffer[0] == '\r' || buffer[0] == '\n') {
             break; // End of headers
         }
@@ -124,7 +128,7 @@ int http_request_read_from_socket(int socket, HttpRequest* http_request) {
     }
     http_request->headers_len = header_count;
 
-    char* body = malloc(body_len); 
+    char* body = malloc(body_len);
     if (body == NULL) {
         free_headers(http_request->headers, header_count);
         return -1;
@@ -142,12 +146,14 @@ int http_request_read_from_socket(int socket, HttpRequest* http_request) {
     return 0; // Successfully parsed the HTTP request
 }
 
-void free_http_request(HttpRequest* http_request) {
+void free_http_request(HttpRequest* http_request)
+{
     free_headers(http_request->headers, http_request->headers_len);
     free(http_request->body);
 }
 
-int copy_http_request(HttpRequest* first, HttpRequest* second) {
+int copy_http_request(HttpRequest* first, HttpRequest* second)
+{
     if (!first || !second) {
         return -1; // Error: Null pointer passed
     }
@@ -206,7 +212,8 @@ int copy_http_request(HttpRequest* first, HttpRequest* second) {
     return 0; // Success
 }
 
-int http_response_write_to_socket(int socket, HttpResponse* http_response) {
+int http_response_write_to_socket(int socket, HttpResponse* http_response)
+{
     // Write status line
     char status_line[512];
     snprintf(status_line, sizeof(status_line), "HTTP/1.0 %s\r\n", http_response->status);
@@ -243,7 +250,8 @@ int http_response_write_to_socket(int socket, HttpResponse* http_response) {
 }
 
 // Constructor for HttpResponse
-HttpResponse* create_http_response(HttpResponse* response, const char* status, const char** headers, size_t headers_count, const char* body) {
+HttpResponse* create_http_response(HttpResponse* response, const char* status, const char** headers, size_t headers_count, const char* body)
+{
     // Duplicate the status string
     response->status = strdup(status);
     if (!response->status) {
@@ -295,7 +303,8 @@ HttpResponse* create_http_response(HttpResponse* response, const char* status, c
 }
 
 // Function to free an HttpResponse
-void free_http_response(HttpResponse* response) {
+void free_http_response(HttpResponse* response)
+{
     if (!response) {
         return;
     }
@@ -310,7 +319,8 @@ void free_http_response(HttpResponse* response) {
     free(response->body);
 }
 
-int copy_http_response(HttpResponse* first, HttpResponse* second) {
+int copy_http_response(HttpResponse* first, HttpResponse* second)
+{
     if (!first || !second) {
         return -1; // Error: Null pointer passed
     }

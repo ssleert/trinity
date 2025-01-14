@@ -2,7 +2,8 @@
 #include "log.h"
 
 // Function to initialize the connection pool
-int init_sqlite_connection_pool(SQLiteConnectionPool *pool, const char *db_path) {
+int init_sqlite_connection_pool(SQLiteConnectionPool* pool, const char* db_path)
+{
     if (!pool || !db_path) {
         return -1;
     }
@@ -22,7 +23,8 @@ int init_sqlite_connection_pool(SQLiteConnectionPool *pool, const char *db_path)
 }
 
 // Function to get a connection from the pool
-sqlite3 *sqlite_get_connection(SQLiteConnectionPool *pool) {
+sqlite3* sqlite_get_connection(SQLiteConnectionPool* pool)
+{
     pthread_mutex_lock(&pool->mutex);
 
     LogTrace("getting connection from pool");
@@ -43,7 +45,8 @@ sqlite3 *sqlite_get_connection(SQLiteConnectionPool *pool) {
 }
 
 // Function to release a connection back to the pool
-void sqlite_release_connection(SQLiteConnectionPool *pool, sqlite3 *connection) {
+void sqlite_release_connection(SQLiteConnectionPool* pool, sqlite3* connection)
+{
     pthread_mutex_lock(&pool->mutex);
 
     LogTrace("condition release");
@@ -60,7 +63,8 @@ void sqlite_release_connection(SQLiteConnectionPool *pool, sqlite3 *connection) 
 }
 
 // Function to destroy the connection pool
-void sqlite_destroy_connection_pool(SQLiteConnectionPool *pool) {
+void sqlite_destroy_connection_pool(SQLiteConnectionPool* pool)
+{
     pthread_mutex_lock(&pool->mutex);
 
     for (int i = 0; i < SQLITE_CONN_POOL_SIZE; i++) {
@@ -74,4 +78,3 @@ void sqlite_destroy_connection_pool(SQLiteConnectionPool *pool) {
     pthread_mutex_destroy(&pool->mutex);
     pthread_cond_destroy(&pool->cond);
 }
-

@@ -1,15 +1,16 @@
 #include "utils.h"
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-
-int is_it_event_subscription(HttpRequest* req) { 
-  return strcmp(req->path, "/events/subscribe");
+int is_it_event_subscription(HttpRequest* req)
+{
+    return strcmp(req->path, "/events/subscribe");
 }
 
-char* xsprintf(const char *fmt, ...) {
+char* xsprintf(const char* fmt, ...)
+{
     if (!fmt) {
         return NULL; // Return error if input is invalid
     }
@@ -26,7 +27,7 @@ char* xsprintf(const char *fmt, ...) {
     }
 
     // Allocate memory for the formatted string
-    char *buffer = (char *)malloc(size + 1);
+    char* buffer = (char*)malloc(size + 1);
     if (!buffer) {
         return NULL; // Memory allocation failed
     }

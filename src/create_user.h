@@ -3,9 +3,9 @@
 
 #include "http.h"
 
-typedef struct { 
-  char* nickname;
-  char* password;
+typedef struct {
+    char* nickname;
+    char* password;
 } CreateUserInput;
 
 void free_create_user_input(CreateUserInput* self);

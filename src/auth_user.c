@@ -1,44 +1,46 @@
 #include "auth_user.h"
-#include "yyjson.h"
+#include "crypto.h"
+#include "db.h"
 #include "log.h"
 #include "sha256.h"
 #include "uuid4.h"
-#include "db.h"
-#include "crypto.h"
+#include "yyjson.h"
 #include <stdlib.h>
 
-void free_auth_user_input(AuthUserInput* self) {
-  free(self->nickname);
-  free(self->password);
+void free_auth_user_input(AuthUserInput* self)
+{
+    free(self->nickname);
+    free(self->password);
 }
 
-int parse_json_to_auth_user_input(size_t json_len, char json[json_len], AuthUserInput* model) {
+int parse_json_to_auth_user_input(size_t json_len, char json[json_len], AuthUserInput* model)
+{
     if (!json || !model) {
         return -1; // Error: Invalid input
     }
 
     // Parse the JSON string into a yyjson document
-    yyjson_doc *doc = yyjson_read(json, json_len, 0);
+    yyjson_doc* doc = yyjson_read(json, json_len, 0);
     if (!doc) {
         return -2; // Error: Failed to parse JSON
     }
 
     // Get the root JSON object
-    yyjson_val *root = yyjson_doc_get_root(doc);
+    yyjson_val* root = yyjson_doc_get_root(doc);
     if (!yyjson_is_obj(root)) {
         yyjson_doc_free(doc);
         return -3; // Error: Root is not a JSON object
     }
 
     // Extract "nickname" field
-    yyjson_val *nickname_val = yyjson_obj_get(root, "nickname");
+    yyjson_val* nickname_val = yyjson_obj_get(root, "nickname");
     if (!yyjson_is_str(nickname_val)) {
         yyjson_doc_free(doc);
         return -4; // Error: "nickname" is missing or not a string
     }
 
     // Extract "password" field
-    yyjson_val *password_val = yyjson_obj_get(root, "password");
+    yyjson_val* password_val = yyjson_obj_get(root, "password");
     if (!yyjson_is_str(password_val)) {
         yyjson_doc_free(doc);
         return -5; // Error: "password" is missing or not a string
@@ -59,7 +61,8 @@ int parse_json_to_auth_user_input(size_t json_len, char json[json_len], AuthUser
     return 0; // Success
 }
 
-int auth_user_route(HttpRequest* req, HttpResponse* res) {
+int auth_user_route(HttpRequest* req, HttpResponse* res)
+{
     LogInfo("auth_user_route executed");
 
     AuthUserInput input;
@@ -74,11 +77,12 @@ int auth_user_route(HttpRequest* req, HttpResponse* res) {
 
     char stored_password_hash[SHA256_HEX_SIZE];
     char stored_password_hash_pow[UUID4_LEN];
-    int  user_id;
+    int user_id;
 
     // Retrieve the stored password hash and proof-of-work (POW) for the user
     if (get_user_password_hash_and_pow_and_id_by_nickname_from_db(
-            input.nickname, stored_password_hash, stored_password_hash_pow, &user_id) != EXIT_SUCCESS) {
+            input.nickname, stored_password_hash, stored_password_hash_pow, &user_id)
+        != EXIT_SUCCESS) {
         create_http_response(res, "404", NULL, 0, "User not found or database error");
         free_auth_user_input(&input);
         LogWarn("Authentication failed: User not found or database error");

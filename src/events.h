@@ -5,31 +5,30 @@
 #include <time.h>
 
 enum {
-  NewMessageEventType
+    NewMessageEventType
 };
 
 static const char* event_type_strs[] = {
-  [NewMessageEventType] = "new_message",
+    [NewMessageEventType] = "new_message",
 };
 
 typedef struct {
-  int event_type;
+    int event_type;
 } EventBase;
 
-
 typedef struct {
-  char uuid[UUID4_LEN];
-  char* data;
-  time_t creation_date;
+    char uuid[UUID4_LEN];
+    char* data;
+    time_t creation_date;
 } MsgWithMetaInfo;
 
 int create_msg_with_meta_info(MsgWithMetaInfo* msg, char* uuid, char* data, time_t creation_date);
 void free_message_with_metainfo(MsgWithMetaInfo* msg);
 
 typedef struct {
-  EventBase base;
-  size_t msgs_len;
-  MsgWithMetaInfo* msgs;
+    EventBase base;
+    size_t msgs_len;
+    MsgWithMetaInfo* msgs;
 } EventNewMessage;
 
 int create_event_new_message(EventNewMessage* ev, MsgWithMetaInfo* msg);

@@ -4,7 +4,8 @@
 #include <string.h>
 
 // Function to create MsgWithMetaInfo structure
-int create_msg_with_meta_info(MsgWithMetaInfo* msg, char* uuid, char* data, time_t creation_date) {
+int create_msg_with_meta_info(MsgWithMetaInfo* msg, char* uuid, char* data, time_t creation_date)
+{
     if (!msg || !uuid || !data) {
         return -1; // Invalid arguments
     }
@@ -26,14 +27,16 @@ int create_msg_with_meta_info(MsgWithMetaInfo* msg, char* uuid, char* data, time
 }
 
 // Function to free MsgWithMetaInfo structure
-void free_message_with_metainfo(MsgWithMetaInfo* msg) {
+void free_message_with_metainfo(MsgWithMetaInfo* msg)
+{
     if (msg) {
         free(msg->data); // Free the dynamically allocated data
     }
 }
 
 // Function to create EventNewMessage structure
-int create_event_new_message(EventNewMessage* ev, MsgWithMetaInfo* msg) {
+int create_event_new_message(EventNewMessage* ev, MsgWithMetaInfo* msg)
+{
     if (!ev || !msg) {
         return -1; // Invalid arguments
     }
@@ -54,7 +57,8 @@ int create_event_new_message(EventNewMessage* ev, MsgWithMetaInfo* msg) {
     return 0; // Success
 }
 
-int copy_event_new_message(EventNewMessage* ev1, EventNewMessage** ev2) {
+int copy_event_new_message(EventNewMessage* ev1, EventNewMessage** ev2)
+{
     if (ev1 == NULL || ev2 == NULL) {
         return -1; // Error: Invalid input
     }
@@ -112,16 +116,21 @@ int copy_event_new_message(EventNewMessage* ev1, EventNewMessage** ev2) {
     return 0; // Success
 }
 
-int copy_event_base(EventBase* ev1, EventBase** ev2) {
-    if (ev1 == NULL) return -1;
+int copy_event_base(EventBase* ev1, EventBase** ev2)
+{
+    if (ev1 == NULL)
+        return -1;
 
     switch (ev1->event_type) {
-        case NewMessageEventType: return copy_event_new_message((EventNewMessage*)ev1, (EventNewMessage**)ev2); 
-        default: return -1;
+    case NewMessageEventType:
+        return copy_event_new_message((EventNewMessage*)ev1, (EventNewMessage**)ev2);
+    default:
+        return -1;
     }
 }
 
-char* convert_event_new_message_to_json(EventNewMessage* ev) {
+char* convert_event_new_message_to_json(EventNewMessage* ev)
+{
     if (!ev) {
         return NULL; // Return error if input is invalid
     }
@@ -131,7 +140,7 @@ char* convert_event_new_message_to_json(EventNewMessage* ev) {
 
     // Start the JSON string
     json = xsprintf("{\"event_type\":%d,\"msgs\":[",
-                    ev->base.event_type);
+        ev->base.event_type);
 
     if (!json) {
         return NULL; // Memory allocation or formatting failed
@@ -143,9 +152,9 @@ char* convert_event_new_message_to_json(EventNewMessage* ev) {
 
         // Format the message as JSON
         temp = xsprintf("{\"uuid\":\"%s\",\"data\":\"%s\",\"creation_date\":%ld}",
-                        msg->uuid,
-                        msg->data ? msg->data : "",
-                        msg->creation_date);
+            msg->uuid,
+            msg->data ? msg->data : "",
+            msg->creation_date);
         if (!temp) {
             free(json); // Cleanup on failure
             return NULL;
@@ -174,18 +183,22 @@ char* convert_event_new_message_to_json(EventNewMessage* ev) {
     return temp; // Return the complete JSON string
 }
 
-char* convert_event_base_to_json(EventBase* ev) {
-    if (ev == NULL) return NULL;
+char* convert_event_base_to_json(EventBase* ev)
+{
+    if (ev == NULL)
+        return NULL;
 
     switch (ev->event_type) {
-        case NewMessageEventType: return convert_event_new_message_to_json((EventNewMessage*)ev); 
-        default: return NULL;
+    case NewMessageEventType:
+        return convert_event_new_message_to_json((EventNewMessage*)ev);
+    default:
+        return NULL;
     }
 }
 
-
 // Function to free EventNewMessage structure
-void free_event_new_message(EventNewMessage* ev) {
+void free_event_new_message(EventNewMessage* ev)
+{
     if (ev) {
         // Free the messages array
         for (size_t i = 0; i < ev->msgs_len; ++i) {
@@ -195,20 +208,22 @@ void free_event_new_message(EventNewMessage* ev) {
     }
 }
 
-void free_event_base(EventBase* ev) {
-    if (ev == NULL) return;  // Check for null pointer
+void free_event_base(EventBase* ev)
+{
+    if (ev == NULL)
+        return; // Check for null pointer
 
     switch (ev->event_type) {
-        case NewMessageEventType:
-            // Cast to the specific event type (EventNewMessage) and call the appropriate free function
-            free_event_new_message((EventNewMessage*)ev);
-            break;
-        
-        // Add cases for other event types as needed in the future
-        default:
-            // Handle unknown event types, if necessary
-            free(ev);
-            break;
+    case NewMessageEventType:
+        // Cast to the specific event type (EventNewMessage) and call the appropriate free function
+        free_event_new_message((EventNewMessage*)ev);
+        break;
+
+    // Add cases for other event types as needed in the future
+    default:
+        // Handle unknown event types, if necessary
+        free(ev);
+        break;
     }
 }
 

@@ -1,6 +1,6 @@
+#include "sha256.h" // Ensure you have the SHA-256 library available
 #include <stdio.h>
 #include <string.h>
-#include "sha256.h"  // Ensure you have the SHA-256 library available
 
 /*
  * Hash a user password combined with proof of work (POW) using SHA-256.
@@ -11,7 +11,8 @@
  *
  * Returns: 0 on success, -1 if an error occurs (e.g., NULL inputs).
  */
-int hash_user_password_with_pow(char* result, const char* user_password, const char* pow) {
+int hash_user_password_with_pow(char* result, const char* user_password, const char* pow)
+{
     // Validate inputs
     if (!result || !user_password || !pow) {
         return -1; // Invalid input

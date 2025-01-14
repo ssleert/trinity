@@ -3,7 +3,8 @@
 #include <stdlib.h>
 
 // Function to create a new node
-QueueNode* createQueueNode(void* data) {
+QueueNode* createQueueNode(void* data)
+{
     QueueNode* newNode = (QueueNode*)malloc(sizeof(QueueNode));
     if (!newNode) {
         return NULL;
@@ -14,7 +15,8 @@ QueueNode* createQueueNode(void* data) {
 }
 
 // Function to initialize a queue
-Queue* createQueue(void) {
+Queue* createQueue(void)
+{
     Queue* queue = (Queue*)malloc(sizeof(Queue));
     if (!queue) {
         return NULL;
@@ -24,12 +26,14 @@ Queue* createQueue(void) {
 }
 
 // Function to check if the queue is empty
-int isEmpty(Queue* queue) {
+int isEmpty(Queue* queue)
+{
     return queue->front == NULL;
 }
 
 // Function to enqueue an element
-void enqueue(Queue* queue, void* data) {
+void enqueue(Queue* queue, void* data)
+{
     QueueNode* newNode = createQueueNode(data);
     if (queue->rear == NULL) {
         queue->front = queue->rear = newNode;
@@ -40,7 +44,8 @@ void enqueue(Queue* queue, void* data) {
 }
 
 // Function to dequeue an element
-void* dequeue(Queue* queue) {
+void* dequeue(Queue* queue)
+{
     if (isEmpty(queue)) {
         printf("Queue is empty\n");
         return NULL;
@@ -55,4 +60,3 @@ void* dequeue(Queue* queue) {
     free(temp);
     return data;
 }
-

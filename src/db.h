@@ -4,24 +4,24 @@
 #include "time.h"
 
 typedef struct {
-  char* uuid;
-  char* nickname;
-  char* password_hash;
-  char* password_hash_pow;
+    char* uuid;
+    char* nickname;
+    char* password_hash;
+    char* password_hash_pow;
 } User;
 
 typedef struct {
-  char* session_key;
-  int   user_id;
+    char* session_key;
+    int user_id;
 } Session;
 
 typedef struct {
-  time_t created_at;
-  time_t updated_at;
-  char* uuid;
-  int   sender_id;
-  int   receiver_id;
-  char* data;
+    time_t created_at;
+    time_t updated_at;
+    char* uuid;
+    int sender_id;
+    int receiver_id;
+    char* data;
 } Message;
 
 int init_db(void);

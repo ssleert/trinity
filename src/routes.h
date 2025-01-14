@@ -5,9 +5,9 @@
 #include <pthread.h>
 
 typedef struct {
-  pthread_t  thrd;
-  HttpRequest* req;
-  HttpResponse* res;
+    pthread_t thrd;
+    HttpRequest* req;
+    HttpResponse* res;
 } RequestAndResponse;
 
 int exec_route_by_path(HttpRequest* req, HttpResponse* res);

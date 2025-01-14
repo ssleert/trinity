@@ -20,7 +20,7 @@ typedef struct {
 typedef struct {
     char* status;
     size_t headers_len;
-    char** headers; 
+    char** headers;
     size_t body_len;
     char* body;
 } HttpResponse;

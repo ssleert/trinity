@@ -1,22 +1,22 @@
 #ifndef EVENT_BUS_H
 #define EVENT_BUS_H
 
-#include "queue.h"
 #include "events.h"
+#include "queue.h"
 #include <pthread.h>
 
 typedef struct {
-  int connected; // if not connected can be reused for another user
-  int user_id;
-  Queue* event_queue;
-  pthread_mutex_t mutex;
-  pthread_cond_t cond;
+    int connected; // if not connected can be reused for another user
+    int user_id;
+    Queue* event_queue;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
 } UserIdWithQueue;
 
 typedef struct {
-  size_t user_queues_len;
-  UserIdWithQueue* user_queues;
-  pthread_mutex_t mutex;
+    size_t user_queues_len;
+    UserIdWithQueue* user_queues;
+    pthread_mutex_t mutex;
 } EventBus;
 
 int init_global_event_bus(void);

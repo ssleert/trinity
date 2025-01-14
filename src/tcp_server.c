@@ -1,7 +1,8 @@
 #include "tcp_server.h"
 
 // Initialize the server by setting up the socket, binding it to the specified port, and setting the callback handler
-int tcp_server_init(TCPServer *server, int port, void (*handler)(int client_socket)) {
+int tcp_server_init(TCPServer* server, int port, void (*handler)(int client_socket))
+{
     server->port = port;
     server->handler = handler;
 
@@ -12,7 +13,7 @@ int tcp_server_init(TCPServer *server, int port, void (*handler)(int client_sock
         return -1;
     }
 
-    if (setsockopt(server->server_socket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0) {
+    if (setsockopt(server->server_socket, SOL_SOCKET, SO_REUSEADDR, &(int) { 1 }, sizeof(int)) < 0) {
         perror("Set socket reuse failed");
         return -1;
     }
@@ -23,7 +24,7 @@ int tcp_server_init(TCPServer *server, int port, void (*handler)(int client_sock
     server->server_addr.sin_port = htons(port);
 
     // Bind the socket to the address and port
-    if (bind(server->server_socket, (struct sockaddr *)&server->server_addr, sizeof(server->server_addr)) < 0) {
+    if (bind(server->server_socket, (struct sockaddr*)&server->server_addr, sizeof(server->server_addr)) < 0) {
         perror("Bind failed");
         close(server->server_socket);
         return -1;
@@ -33,7 +34,8 @@ int tcp_server_init(TCPServer *server, int port, void (*handler)(int client_sock
 }
 
 // Start listening for incoming client connections
-int tcp_server_listen(TCPServer *server, int backlog) {
+int tcp_server_listen(TCPServer* server, int backlog)
+{
     if (listen(server->server_socket, backlog) < 0) {
         perror("Listen failed");
         return -1;
@@ -42,9 +44,10 @@ int tcp_server_listen(TCPServer *server, int backlog) {
 }
 
 // Accept a client connection and call the user-defined handler
-int tcp_server_accept(TCPServer *server, int *client_socket) {
+int tcp_server_accept(TCPServer* server, int* client_socket)
+{
     socklen_t addr_len = sizeof(server->server_addr);
-    *client_socket = accept(server->server_socket, (struct sockaddr *)&server->server_addr, &addr_len);
+    *client_socket = accept(server->server_socket, (struct sockaddr*)&server->server_addr, &addr_len);
     if (*client_socket < 0) {
         perror("Accept failed");
         return -1;
@@ -59,11 +62,11 @@ int tcp_server_accept(TCPServer *server, int *client_socket) {
 }
 
 // Shutdown the server and close the socket
-int tcp_server_shutdown(TCPServer *server) {
+int tcp_server_shutdown(TCPServer* server)
+{
     if (close(server->server_socket) < 0) {
         perror("Server shutdown failed");
         return -1;
     }
     return 0;
 }
-
