@@ -212,11 +212,54 @@ int copy_http_request(HttpRequest* first, HttpRequest* second)
     return 0; // Success
 }
 
+/**
+ * Adds CORS headers to the HttpResponse to allow all origins.
+ * 
+ * @param http_response Pointer to the HttpResponse structure.
+ * @return 0 on success, -1 on error (e.g., memory allocation failure).
+ */
+int http_response_add_cors_headers(HttpResponse* http_response) {
+    if (http_response == NULL) {
+        return -1;
+    }
+
+
+    // Allocate memory for the new headers
+    size_t new_headers_len = http_response->headers_len + 3; // Adding 3 CORS headers
+    char** new_headers = (char**)realloc(http_response->headers, new_headers_len * sizeof(char*));
+    if (new_headers == NULL) {
+        return -1; // Memory allocation failed
+    }
+
+    http_response->headers = new_headers;
+
+    // Add the new headers
+    http_response->headers[http_response->headers_len] = strdup(ALLOW_ORIGIN_HEADER);
+    http_response->headers[http_response->headers_len + 1] = strdup(ALLOW_METHODS_HEADER);
+    http_response->headers[http_response->headers_len + 2] = strdup(ALLOW_HEADERS_HEADER);
+
+    // Check for allocation failures
+    if (!http_response->headers[http_response->headers_len] ||
+        !http_response->headers[http_response->headers_len + 1] ||
+        !http_response->headers[http_response->headers_len + 2]) {
+        // Free partially allocated headers
+        free(http_response->headers[http_response->headers_len]);
+        free(http_response->headers[http_response->headers_len + 1]);
+        free(http_response->headers[http_response->headers_len + 2]);
+        return -1;
+    }
+
+    // Update the headers length
+    http_response->headers_len = new_headers_len;
+
+    return 0;
+}
+
 int http_response_write_to_socket(int socket, HttpResponse* http_response)
 {
     // Write status line
     char status_line[512];
-    snprintf(status_line, sizeof(status_line), "HTTP/1.0 %s\r\n", http_response->status);
+    snprintf(status_line, sizeof(status_line), "HTTP/1.1 %s\r\n", http_response->status);
     if (write(socket, status_line, strlen(status_line)) < 0) {
         return -1; // Failed to write to socket
     }

@@ -1,0 +1,23 @@
+.light-theme {
+  --background-color: #f4f4f6;
+  --foreground-color: white;
+  --title-text-color: #333;
+  --label-text-color: #555;
+  --border-color: #ccc;
+  --blue-accent-color: #4c8bf5;
+  --darker-blue-accent-color: #357ae8;
+}
+
+.dark-theme {
+  --background-color: #222222;
+  --foreground-color: #333333;
+  --title-text-color: #e0e0e0;
+  --label-text-color: #c0c0c0;
+  --border-color: #444;
+  --blue-accent-color: #4c8bf5; /* Kept same for consistency */
+  --darker-blue-accent-color: #357ae8; /* Kept same for consistency */
+}
+
+.fonts {
+  font-family: sans-serif;
+}

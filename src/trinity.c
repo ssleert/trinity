@@ -68,6 +68,7 @@ void client_handler(int client_socket)
         send(client_socket, HTTP_NOT_FOUND_ERROR, sizeof(HTTP_NOT_FOUND_ERROR) - 1, 0);
         close(client_socket);
         free_http_request(&request);
+        free_http_response(&response);
         return;
     }
     if (rc < 0) {
@@ -75,6 +76,16 @@ void client_handler(int client_socket)
         send(client_socket, HTTP_INTERNAL_SERVER_ERROR, sizeof(HTTP_INTERNAL_SERVER_ERROR) - 1, 0);
         close(client_socket);
         free_http_request(&request);
+        free_http_response(&response);
+        return;
+    }
+
+    if (http_response_add_cors_headers(&response)) { 
+        perror("Http add cors header to response failed");
+        send(client_socket, HTTP_INTERNAL_SERVER_ERROR, sizeof(HTTP_INTERNAL_SERVER_ERROR) - 1, 0);
+        close(client_socket);
+        free_http_request(&request);
+        free_http_response(&response);
         return;
     }
 
@@ -83,6 +94,7 @@ void client_handler(int client_socket)
         send(client_socket, HTTP_INTERNAL_SERVER_ERROR, sizeof(HTTP_INTERNAL_SERVER_ERROR) - 1, 0);
         close(client_socket);
         free_http_request(&request);
+        free_http_response(&response);
         return;
     };
 

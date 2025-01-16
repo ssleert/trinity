@@ -1,0 +1,88 @@
+/* Center the form vertically and horizontally */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: var(--background-color); /* Soft gray background */
+  margin: 0;
+}
+
+/* Card-like container for the form */
+.login-card {
+  background: var(--foreground-color);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 13px 30px;
+  width: 320px;
+  text-align: center;
+}
+
+/* Title styling */
+.login-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--title-text-color);
+  margin-bottom: 20px;
+}
+
+/* Form labels */
+.login-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--label-text-color);
+  display: block;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+/* Form labels */
+.login-change-page {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--label-text-color);
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+/* Form inputs */
+.login-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background: var(--background-color);
+  color: var(--title-text-color);
+}
+
+/* Button styling */
+.login-button {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--blue-accent-color); /* Soft blue accent color */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 13px;
+  margin-top: 6px;
+}
+
+.login-button:hover {
+  background-color: var(--darker-blue-accent-color); /* Slightly darker blue on hover */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .login-card {
+    width: 90%;
+    padding: 15px;
+  }
+}

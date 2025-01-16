@@ -39,4 +39,11 @@ int get_user_id_by_session_key(const char* session_key, int* user_id);
 
 int add_message_to_db(const Message* message);
 
+typedef struct {
+    char* uuid;
+    char* nickname;
+} SenderUuidAndNickname;
+
+int get_all_senders_uuid_and_nicknames_by_user_id_from_session_key(char* session_key, SenderUuidAndNickname** senders, size_t* senders_len);
+
 #endif

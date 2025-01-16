@@ -467,3 +467,106 @@ int get_user_id_by_session_key(const char* session_key, int* user_id)
     sqlite_release_connection(&conn_pool, db);
     return EXIT_FAILURE;
 }
+
+int get_all_senders_uuid_and_nicknames_by_user_id_from_session_key(
+    char* session_key, SenderUuidAndNickname** senders, size_t* senders_len)
+{
+    if (!session_key || !senders || !senders_len) {
+        LogErr("Invalid input: session_key, senders, or senders_len is NULL.");
+        return EXIT_FAILURE;
+    }
+
+    sqlite3* db = sqlite_get_connection(&conn_pool);
+
+    // Find the user_id associated with the given session_key
+    int user_id = 0;
+    if (get_user_id_by_session_key(session_key, &user_id) != EXIT_SUCCESS) {
+        LogErr("Failed to retrieve user ID for session key: %s", session_key);
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
+
+    const char* sql =
+        "SELECT DISTINCT u.uuid, u.nickname "
+        "FROM messages m "
+        "JOIN users u ON m.sender_id = u.id "
+        "WHERE m.receiver_id = ?;";
+
+    sqlite3_stmt* stmt;
+
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        LogErr("Failed to prepare SQL statement: %s", sqlite3_errmsg(db));
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
+
+    // Bind the user_id parameter
+    sqlite3_bind_int(stmt, 1, user_id);
+
+    *senders = NULL;
+    *senders_len = 0;
+
+    size_t capacity = 10; // Initial capacity for the senders array
+    *senders = malloc(capacity * sizeof(SenderUuidAndNickname));
+    if (!*senders) {
+        LogErr("Memory allocation failed for senders array.");
+        sqlite3_finalize(stmt);
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
+
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        if (*senders_len == capacity) {
+            capacity *= 2;
+            *senders = realloc(*senders, capacity * sizeof(SenderUuidAndNickname));
+            if (!*senders) {
+                LogErr("Memory reallocation failed for senders array.");
+                sqlite3_finalize(stmt);
+                sqlite_release_connection(&conn_pool, db);
+                return EXIT_FAILURE;
+            }
+        }
+
+        SenderUuidAndNickname* current_sender = &(*senders)[*senders_len];
+
+        const char* uuid = (const char*)sqlite3_column_text(stmt, 0);
+        const char* nickname = (const char*)sqlite3_column_text(stmt, 1);
+
+        current_sender->uuid = strdup(uuid);
+        current_sender->nickname = strdup(nickname);
+
+        if (!current_sender->uuid || !current_sender->nickname) {
+            LogErr("Memory allocation failed for sender UUID or nickname.");
+            for (size_t i = 0; i < *senders_len; i++) {
+                free((*senders)[i].uuid);
+                free((*senders)[i].nickname);
+            }
+            free(*senders);
+            sqlite3_finalize(stmt);
+            sqlite_release_connection(&conn_pool, db);
+            return EXIT_FAILURE;
+        }
+
+        (*senders_len)++;
+    }
+
+    if (rc != SQLITE_DONE) {
+        LogErr("Failed to fetch sender data: %s", sqlite3_errmsg(db));
+        for (size_t i = 0; i < *senders_len; i++) {
+            free((*senders)[i].uuid);
+            free((*senders)[i].nickname);
+        }
+        free(*senders);
+        sqlite3_finalize(stmt);
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite_release_connection(&conn_pool, db);
+
+    LogInfo("Retrieved %zu senders for user ID %d.", *senders_len, user_id);
+    return EXIT_SUCCESS;
+}
+

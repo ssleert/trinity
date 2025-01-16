@@ -106,8 +106,6 @@ int add_new_event_to_queue_by_user_id(EventBus* eb, int user_id, EventBase* ev)
         }
     }
 
-    free_event_base(ev);
-
     if (!found) {
         LogWarn("User ID: %d not found or not connected.", user_id);
         return -1; // User ID not found or not connected
