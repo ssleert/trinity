@@ -29,7 +29,7 @@ int create_event_bus(EventBus* eb)
 
     LogTrace("Creating event bus.");
     eb->user_queues_len = 0;
-    eb->user_queues = malloc(1);
+    eb->user_queues = malloc(sizeof(*eb->user_queues));
     if (!eb->user_queues) {
         LogErr("Failed to allocate memory for user queues.");
         return -1;
@@ -97,7 +97,7 @@ int add_new_event_to_queue_by_user_id(EventBus* eb, int user_id, EventBase* ev)
         if (eb->user_queues[i].connected && eb->user_queues[i].user_id == user_id) {
             LogTrace("Found user ID: %d at index: %zu. Adding event to queue.", user_id, i);
             pthread_mutex_lock(&eb->user_queues[i].mutex);
-            EventBase* ev_copy;
+            EventBase* ev_copy = NULL;
             copy_event_base(ev, &ev_copy);
             enqueue(eb->user_queues[i].event_queue, ev_copy);
             pthread_cond_signal(&eb->user_queues[i].cond); // Notify the user of the new event

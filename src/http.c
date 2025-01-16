@@ -86,7 +86,7 @@ int http_request_read_from_socket(int socket, HttpRequest* http_request)
     }
 
     int header_count = 0;
-    size_t body_len = 0;
+    ssize_t body_len = 0;
 
     // Read headers until an empty line (end of headers)
     while (true) {
@@ -121,7 +121,7 @@ int http_request_read_from_socket(int socket, HttpRequest* http_request)
         char* content_len_ptr = strstr(buffer, CONTENT_LEN);
         if (content_len_ptr != NULL) {
             content_len_ptr += sizeof(CONTENT_LEN) - 1;
-            if (sscanf(content_len_ptr, "%12lu", &body_len) != 1) {
+            if (sscanf(content_len_ptr, "%12ld", &body_len) != 1) {
                 return -1;
             };
         }

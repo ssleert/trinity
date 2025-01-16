@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+const char* event_type_strs[] = {
+    [NewMessageEventType] = "new_message",
+};
+
 // Function to create MsgWithMetaInfo structure
 int create_msg_with_meta_info(MsgWithMetaInfo* msg, char* uuid, char* data, time_t creation_date)
 {
@@ -59,7 +63,7 @@ int create_event_new_message(EventNewMessage* ev, MsgWithMetaInfo* msg)
 
 int copy_event_new_message(EventNewMessage* ev1, EventNewMessage** ev2)
 {
-    if (ev1 == NULL || ev2 == NULL) {
+    if (ev1 == NULL) {
         return -1; // Error: Invalid input
     }
 
@@ -226,5 +230,3 @@ void free_event_base(EventBase* ev)
         break;
     }
 }
-
-char* convert_event_new_message_to_json(EventNewMessage* ev);

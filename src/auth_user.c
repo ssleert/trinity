@@ -108,8 +108,8 @@ int auth_user_route(HttpRequest* req, HttpResponse* res)
     // Compare the computed hash with the stored hash
     if (strcmp(computed_password_hash, stored_password_hash) != 0) {
         create_http_response(res, "401", NULL, 0, "Invalid credentials");
-        free_auth_user_input(&input);
         LogWarn("Authentication failed: Invalid credentials for user: %s", input.nickname);
+        free_auth_user_input(&input);
         return 0;
     }
 

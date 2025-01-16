@@ -8,9 +8,7 @@ enum {
     NewMessageEventType
 };
 
-static const char* event_type_strs[] = {
-    [NewMessageEventType] = "new_message",
-};
+extern const char* event_type_strs[];
 
 typedef struct {
     int event_type;

@@ -46,4 +46,12 @@ typedef struct {
 
 int get_all_senders_uuid_and_nicknames_by_user_id_from_session_key(char* session_key, SenderUuidAndNickname** senders, size_t* senders_len);
 
+typedef struct {
+    char* data;
+    time_t created_at;
+    time_t updated_at;
+} MessageWithTimeAndData;
+
+int get_messages_by_reciever_user_id_from_session_key_and_sender_user_uuid(char* session_key, char* user_id, int offset, int limit, MessageWithTimeAndData** msgs, size_t* msgs_len);
+
 #endif

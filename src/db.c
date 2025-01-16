@@ -570,3 +570,117 @@ int get_all_senders_uuid_and_nicknames_by_user_id_from_session_key(
     return EXIT_SUCCESS;
 }
 
+int get_messages_by_reciever_user_id_from_session_key_and_sender_user_uuid(
+    char* session_key, char* sender_uuid, int offset, int limit,
+    MessageWithTimeAndData** msgs, size_t* msgs_len) {
+
+    if (!session_key || !sender_uuid || !msgs || !msgs_len) {
+        LogErr("Invalid input: session_key, sender_uuid, msgs, or msgs_len is NULL.");
+        return EXIT_FAILURE;
+    }
+
+    sqlite3* db = sqlite_get_connection(&conn_pool);
+
+    // Find the user_id associated with the given session_key
+    int receiver_user_id = 0;
+    if (get_user_id_by_session_key(session_key, &receiver_user_id) != EXIT_SUCCESS) {
+        LogErr("Failed to retrieve user ID for session key: %s", session_key);
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
+
+    // Find the sender_id associated with the sender_uuid
+    int sender_user_id = 0;
+    if (get_user_id_by_uuid(sender_uuid, &sender_user_id) != EXIT_SUCCESS) {
+        LogErr("Failed to retrieve user ID for sender UUID: %s", sender_uuid);
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
+
+    const char* sql =
+        "SELECT data, created_at, updated_at "
+        "FROM messages "
+        "WHERE receiver_id = ? AND sender_id = ? AND deleted_at IS NULL "
+        "ORDER BY created_at ASC "
+        "LIMIT ? OFFSET ?;";
+
+    sqlite3_stmt* stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        LogErr("Failed to prepare SQL statement: %s", sqlite3_errmsg(db));
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
+
+    // Bind parameters
+    sqlite3_bind_int(stmt, 1, receiver_user_id);
+    sqlite3_bind_int(stmt, 2, sender_user_id);
+    sqlite3_bind_int(stmt, 3, limit);
+    sqlite3_bind_int(stmt, 4, offset);
+
+    *msgs = NULL;
+    *msgs_len = 0;
+
+    size_t capacity = 10; // Initial capacity for the messages array
+    *msgs = malloc(capacity * sizeof(MessageWithTimeAndData));
+    if (!*msgs) {
+        LogErr("Memory allocation failed for messages array.");
+        sqlite3_finalize(stmt);
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
+
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        if (*msgs_len == capacity) {
+            capacity *= 2;
+            *msgs = realloc(*msgs, capacity * sizeof(MessageWithTimeAndData));
+            if (!*msgs) {
+                LogErr("Memory reallocation failed for messages array.");
+                sqlite3_finalize(stmt);
+                sqlite_release_connection(&conn_pool, db);
+                return EXIT_FAILURE;
+            }
+        }
+
+        MessageWithTimeAndData* current_msg = &(*msgs)[*msgs_len];
+
+        const char* data = (const char*)sqlite3_column_text(stmt, 0);
+        time_t created_at = sqlite3_column_int64(stmt, 1);
+        time_t updated_at = sqlite3_column_int64(stmt, 2);
+
+        current_msg->data = strdup(data);
+        current_msg->created_at = created_at;
+        current_msg->updated_at = updated_at;
+
+        if (!current_msg->data) {
+            LogErr("Memory allocation failed for message data.");
+            for (size_t i = 0; i < *msgs_len; i++) {
+                free((*msgs)[i].data);
+            }
+            free(*msgs);
+            sqlite3_finalize(stmt);
+            sqlite_release_connection(&conn_pool, db);
+            return EXIT_FAILURE;
+        }
+
+        (*msgs_len)++;
+    }
+
+    if (rc != SQLITE_DONE) {
+        LogErr("Failed to fetch message data: %s", sqlite3_errmsg(db));
+        for (size_t i = 0; i < *msgs_len; i++) {
+            free((*msgs)[i].data);
+        }
+        free(*msgs);
+        sqlite3_finalize(stmt);
+        sqlite_release_connection(&conn_pool, db);
+        return EXIT_FAILURE;
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite_release_connection(&conn_pool, db);
+
+    LogInfo("Retrieved %zu messages for receiver ID %d and sender ID %d.", *msgs_len, receiver_user_id, sender_user_id);
+    return EXIT_SUCCESS;
+}
+
