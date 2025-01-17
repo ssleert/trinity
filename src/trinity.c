@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 // Custom handler function to handle client connections
 void client_handler(int client_socket)

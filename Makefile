@@ -2,7 +2,7 @@ DEBUG      ?= 1
 STATIC     ?= 0
 
 CC         ?= gcc-14
-CFLAGS     ?= -std=c99 -Wall -Wextra -Wpedantic \
+CFLAGS     ?= -std=gnu99 -Wall -Wextra -Wpedantic \
               -Wformat=2 -Wno-unused-parameter -Wshadow \
               -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
               -Wredundant-decls -Wnested-externs -Wmissing-include-dirs \
