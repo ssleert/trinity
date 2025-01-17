@@ -52,6 +52,8 @@ typedef struct {
     time_t updated_at;
 } MessageWithTimeAndData;
 
-int get_messages_by_reciever_user_id_from_session_key_and_sender_user_uuid(char* session_key, char* user_id, int offset, int limit, MessageWithTimeAndData** msgs, size_t* msgs_len);
+int get_messages_by_reciever_user_id_from_session_key_and_sender_user_uuid(
+    char* session_key, char* sender_uuid, int offset, int limit,
+    MessageWithTimeAndData** msgs, size_t* msgs_len);
 
 #endif

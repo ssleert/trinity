@@ -4,6 +4,7 @@
 #include "create_user.h"
 #include "event_subcribe.h"
 #include "get_contacts.h"
+#include "get_messages.h"
 #include "http.h"
 #include "log.h"
 #include <stdlib.h>
@@ -12,6 +13,15 @@
 
 int exec_route_by_path(HttpRequest* req, HttpResponse* res)
 {
+    char* path = strdup(req->path);
+    if (!path) {
+        return -256;
+    }
+    char* q_mark = strchr(path, '?');
+    if (q_mark) {
+        *q_mark = '\0';
+    }
+
     // cors support
     if (strcmp(req->method, "OPTIONS") == 0) {
 
@@ -20,11 +30,14 @@ int exec_route_by_path(HttpRequest* req, HttpResponse* res)
         return 0;
     }
 
-    return strcmp(req->path, "/register") == 0 ? create_user_route(req, res) : strcmp(req->path, "/login") == 0 ? auth_user_route(req, res)
-        : strcmp(req->path, "/send") == 0                                                                       ? add_message_route(req, res)
-        : strcmp(req->path, "/events/subscribe") == 0                                                           ? event_subcribe_route(req, res)
-        : strcmp(req->path, "/contacts") == 0                                                                   ? get_contacts_route(req, res)
-                                                                                                                : -255;
+    int rc = strcmp(path, "/register") == 0 ? create_user_route(req, res) : strcmp(path, "/login") == 0 ? auth_user_route(req, res)
+        : strcmp(path, "/send") == 0                                                                       ? add_message_route(req, res)
+        : strcmp(path, "/events/subscribe") == 0                                                           ? event_subcribe_route(req, res)
+        : strcmp(path, "/contacts") == 0                                                                   ? get_contacts_route(req, res)
+        : strcmp(path, "/messages") == 0                                                                   ? get_messages_route(req, res) : -255;
+
+    free(path);
+    return rc;
 }
 
 void* exec_route_by_path_in_thread(void* data)
