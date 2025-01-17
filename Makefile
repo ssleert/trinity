@@ -13,7 +13,7 @@ ifeq ($(CC),gcc)
 endif
 
 CFLAGS_RELEASE = $(CFLAGS) -Ofast -DNDEBUG -DNTRACE -march=native
-ifeq ($(CC),gcc-14)
+ifeq ($(CC),gcc)
   CFLAGS_RELEASE += -flto
 endif
 ifeq ($(STATIC),1)
